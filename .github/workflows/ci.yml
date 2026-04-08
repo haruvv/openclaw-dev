@@ -21,7 +21,6 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-        # package.json が存在する場合のみキャッシュを有効にする
         continue-on-error: true
 
       - name: Install dependencies
@@ -56,13 +55,15 @@ jobs:
             echo "No test script found, skipping"
           fi
 
-      - name: Notify Discord (CI failure)
+      - name: Notify Telegram (CI failure)
         if: failure() && github.event_name == 'pull_request'
         run: |
-          curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -H "Content-Type: application/json" \
             -d "{
-              \"content\": \":x: **[${{ github.repository }}]** CI が失敗しました。\nPR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}\n<${{ github.event.pull_request.html_url }}>\"
+              \"chat_id\": \"${TELEGRAM_CHAT_ID}\",
+              \"text\": \"❌ CI が失敗しました。\nPR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}\"
             }"
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
