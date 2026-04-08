@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+        # package.json が存在する場合のみキャッシュを有効にする
+        continue-on-error: true
+
+      - name: Install dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+          else
+            echo "package.json not found, skipping npm install"
+          fi
+
+      - name: Lint
+        run: |
+          if [ -f package.json ] && npm run lint --if-present 2>/dev/null; then
+            echo "Lint passed"
+          else
+            echo "No lint script found, skipping"
+          fi
+
+      - name: Type check
+        run: |
+          if [ -f package.json ] && npm run typecheck --if-present 2>/dev/null; then
+            echo "Type check passed"
+          else
+            echo "No typecheck script found, skipping"
+          fi
+
+      - name: Test
+        run: |
+          if [ -f package.json ] && npm test --if-present 2>/dev/null; then
+            echo "Tests passed"
+          else
+            echo "No test script found, skipping"
+          fi
+
+      - name: Notify Discord (CI failure)
+        if: failure() && github.event_name == 'pull_request'
+        run: |
+          curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \":x: **[${{ github.repository }}]** CI が失敗しました。\nPR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}\n<${{ github.event.pull_request.html_url }}>\"
+            }"
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

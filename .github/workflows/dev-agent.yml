@@ -1,0 +1,57 @@
+name: Dev Agent
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  implement:
+    # ai-dev ラベルが付与されたときのみ実行
+    if: github.event.label.name == 'ai-dev'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Implement issue with Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            以下の GitHub Issue を実装してください。
+
+            ## Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            ${{ github.event.issue.body }}
+
+            ## 実装方針
+            - CLAUDE.md の指針に従う
+            - テストがある場合は実行して通過することを確認する
+            - 実装完了後、PR を作成して Issue #${{ github.event.issue.number }} をリンクする
+
+      - name: Notify Discord (success)
+        if: success()
+        run: |
+          curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \":white_check_mark: **[${{ github.repository }}]** Issue #${{ github.event.issue.number }} の実装が完了しました。\n**${{ github.event.issue.title }}**\n<https://github.com/${{ github.repository }}/issues/${{ github.event.issue.number }}>\"
+            }"
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Discord (failure)
+        if: failure()
+        run: |
+          curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \":x: **[${{ github.repository }}]** Issue #${{ github.event.issue.number }} の実装に失敗しました。\n**${{ github.event.issue.title }}**\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>\"
+            }"
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
