@@ -1,7 +1,26 @@
 # Claude Code 作業指針
 
-openclaw-dev は自律開発エージェントの作業リポジトリ。
+openclaw-dev は自律開発エージェントの作業リポジトリ兼モノレポ。
 GitHub Issues で受け取ったタスクを実装・デプロイし、Telegram で結果を報告する。
+
+## リポジトリ構成
+
+```
+openclaw-dev/
+├── CLAUDE.md
+├── .claude/
+├── .github/workflows/
+└── apps/                ← アプリはここに置く
+    ├── <app-name>/      ← Cloudflare Worker / Pages
+    │   ├── wrangler.jsonc
+    │   ├── src/
+    │   └── package.json
+    └── ...
+```
+
+- 新しいアプリは `apps/<name>/` を切って作る
+- 各アプリは独立した `wrangler.jsonc` と `package.json` を持つ
+- 共有コードが必要になったら `packages/` を追加する
 
 ## 方針
 
@@ -22,7 +41,11 @@ GitHub Issues で受け取ったタスクを実装・デプロイし、Telegram 
 
 ## コマンド
 
+アプリのディレクトリに入ってから実行する。
+
 ```bash
+cd apps/<name>
+
 # 依存関係
 npm ci
 
@@ -35,9 +58,6 @@ npm run lint            # なければスキップ
 # テスト
 npm test                # なければスキップ
 
-# ビルド
-npm run build           # なければスキップ
-
 # デプロイ（本番）
 npx wrangler deploy
 
@@ -47,26 +67,22 @@ npx wrangler deploy --env dev
 
 ## 作業フロー
 
-1. Issue の内容を読んで要件を把握する
-2. 既存コードを調査する（関連ファイルを特定してから読む）
+1. Issue を読んで対象アプリを特定する（`apps/` 以下のどれか、または新規）
+2. 対象アプリのコードを調査する
 3. 実装する
-4. 検証ループを実行する（下記）
+4. 対象アプリのディレクトリで検証ループを実行する
 5. `git push origin main` で直接プッシュする
-6. Cloudflare にデプロイする（対象がある場合）
+6. 対象アプリのディレクトリでデプロイする
 7. デプロイ後の動作を確認する
 
 ## 検証ループ
 
-実装後、エラーがあれば即座に修正してから次へ進む。
+対象アプリのディレクトリで実行する。エラーがあれば即座に修正してから次へ進む。
 
 ```bash
-# 1. 型チェック
+cd apps/<name>
 npm run typecheck 2>/dev/null || npx tsc --noEmit 2>/dev/null || true
-
-# 2. Lint
 npm run lint 2>/dev/null || true
-
-# 3. テスト
 npm test 2>/dev/null || true
 ```
 
@@ -84,20 +100,20 @@ npm test 2>/dev/null || true
 | **Ask first** | 外部サービスとの新規統合 / データスキーマの破壊的変更 |
 | **Never** | リポジトリ・ブランチの削除 / データストアの全削除 / 他リポジトリへの破壊的操作 |
 
-## デプロイ対象の判断
+## デプロイ判断
 
 Issue 本文を読んでデプロイ先を判断する。
 
 | 指示 | コマンド |
 |------|---------|
-| 明示なし / 本番 | `npx wrangler deploy` |
-| dev 環境・ステージング | `npx wrangler deploy --env dev` |
+| 明示なし / 本番 | `cd apps/<name> && npx wrangler deploy` |
+| dev 環境 | `cd apps/<name> && npx wrangler deploy --env dev` |
 | デプロイ不要（ドキュメント等） | スキップ |
 
 ## コミット
 
 ```bash
 git add -A
-git commit -m "feat: <概要>"   # または fix: / chore: / docs:
+git commit -m "feat(<app-name>): <概要>"   # または fix: / chore: / docs:
 git push origin main
 ```
