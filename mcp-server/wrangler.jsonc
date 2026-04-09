@@ -1,0 +1,15 @@
+{
+	"name": "openclaw-dev-team",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-04-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true
+	},
+	"kv_namespaces": [
+		{
+			"binding": "DEV_TEAM_TASKS",
+			"id": "PLACEHOLDER_KV_ID"
+		}
+	]
+}
