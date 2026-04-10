@@ -1,0 +1,11 @@
+{
+  "name": "hello-openclaw-pages",
+  "version": "1.0.0",
+  "description": "Hello OpenClaw - Cloudflare Pages",
+  "scripts": {
+    "deploy": "wrangler pages deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
