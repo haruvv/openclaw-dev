@@ -4,6 +4,10 @@ on:
   issues:
     types: [labeled]
 
+concurrency:
+  group: implement
+  cancel-in-progress: false
+
 jobs:
   implement:
     if: github.event.label.name == 'ai-dev'
@@ -11,7 +15,6 @@ jobs:
     permissions:
       contents: write
       issues: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -30,8 +33,9 @@ jobs:
           TEXT="🔨 実装開始: Issue #${{ github.event.issue.number }}\n${ISSUE_TITLE}\n${RUN_URL}"
           jq -n --arg chat_id "$TELEGRAM_CHAT_ID" --arg text "$TEXT" \
             '{chat_id: $chat_id, text: $text}' | \
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H "Content-Type: application/json" -d @-
+          curl -s --fail --show-error --retry 3 \
+            -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" -d @- || true
 
       - name: Implement with Claude Code
         id: implement
@@ -123,8 +127,6 @@ jobs:
         id: deploy_url
         if: success()
         run: |
-          # wrangler deploy の出力から URL を抽出（ログに残っているはず）
-          # なければ空文字のまま
           URL=$(grep -oP 'https://[^\s]+\.workers\.dev' "$GITHUB_STEP_SUMMARY" 2>/dev/null | tail -1 || true)
           echo "url=${URL}" >> $GITHUB_OUTPUT
 
@@ -141,8 +143,9 @@ jobs:
           [ -n "$DEPLOY_URL" ] && TEXT="${TEXT}\n🚀 ${DEPLOY_URL}"
           jq -n --arg chat_id "$TELEGRAM_CHAT_ID" --arg text "$TEXT" \
             '{chat_id: $chat_id, text: $text}' | \
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H "Content-Type: application/json" -d @-
+          curl -s --fail --show-error --retry 3 \
+            -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" -d @- || true
 
       - name: Notify Telegram (failure)
         if: failure()
@@ -155,5 +158,6 @@ jobs:
           TEXT="❌ Issue #${{ github.event.issue.number }} 失敗\n${ISSUE_TITLE}\n${RUN_URL}"
           jq -n --arg chat_id "$TELEGRAM_CHAT_ID" --arg text "$TEXT" \
             '{chat_id: $chat_id, text: $text}' | \
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H "Content-Type: application/json" -d @-
+          curl -s --fail --show-error --retry 3 \
+            -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" -d @- || true
