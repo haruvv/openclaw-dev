@@ -21,16 +21,17 @@ jobs:
           node-version: '22'
 
       - name: Notify Telegram (start)
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"chat_id\": \"${TELEGRAM_CHAT_ID}\",
-              \"text\": \"🔨 実装開始: Issue #${{ github.event.issue.number }}\n${{ github.event.issue.title }}\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
-            }"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TEXT="🔨 実装開始: Issue #${{ github.event.issue.number }}\n${ISSUE_TITLE}\n${RUN_URL}"
+          jq -n --arg chat_id "$TELEGRAM_CHAT_ID" --arg text "$TEXT" \
+            '{chat_id: $chat_id, text: $text}' | \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" -d @-
 
       - name: Implement with Claude Code
         id: implement
@@ -129,28 +130,30 @@ jobs:
 
       - name: Notify Telegram (success)
         if: success()
-        run: |
-          DEPLOY_URL="${{ steps.deploy_url.outputs.url }}"
-          TEXT="✅ Issue #${{ github.event.issue.number }} 完了\n${{ github.event.issue.title }}\n${{ github.event.issue.html_url }}"
-          if [ -n "$DEPLOY_URL" ]; then
-            TEXT="${TEXT}\n🚀 ${DEPLOY_URL}"
-          fi
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H "Content-Type: application/json" \
-            -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"text\": \"${TEXT}\"}"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          DEPLOY_URL: ${{ steps.deploy_url.outputs.url }}
+        run: |
+          TEXT="✅ Issue #${{ github.event.issue.number }} 完了\n${ISSUE_TITLE}\n${ISSUE_URL}"
+          [ -n "$DEPLOY_URL" ] && TEXT="${TEXT}\n🚀 ${DEPLOY_URL}"
+          jq -n --arg chat_id "$TELEGRAM_CHAT_ID" --arg text "$TEXT" \
+            '{chat_id: $chat_id, text: $text}' | \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" -d @-
 
       - name: Notify Telegram (failure)
         if: failure()
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"chat_id\": \"${TELEGRAM_CHAT_ID}\",
-              \"text\": \"❌ Issue #${{ github.event.issue.number }} 失敗\n${{ github.event.issue.title }}\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
-            }"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TEXT="❌ Issue #${{ github.event.issue.number }} 失敗\n${ISSUE_TITLE}\n${RUN_URL}"
+          jq -n --arg chat_id "$TELEGRAM_CHAT_ID" --arg text "$TEXT" \
+            '{chat_id: $chat_id, text: $text}' | \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" -d @-
