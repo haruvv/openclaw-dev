@@ -51,6 +51,96 @@ jobs:
 
             ---
 
+            ## Issue 種別の判定
+
+            Issue タイトルが `[収益化]` で始まる場合は **サイト作成モード** で動く（以下参照）。
+            それ以外は通常の Phase 1 → Phase 2 の手順に従う。
+
+            ---
+
+            ## サイト作成モード（タイトルが `[収益化]` の場合のみ）
+
+            ### ディレクトリとスラグ
+
+            Issue タイトルからサイト名を抽出し、スラグを決める。
+            例: `[収益化] ペット用品 アフィリエイトサイト構築` → slug = `pet-affiliate`
+
+            作業ディレクトリ: `apps/<slug>/`（このリポジトリ内に新規作成）
+
+            ### 作成する Astro プロジェクト構造
+
+            ```
+            apps/<slug>/
+              package.json
+              astro.config.mjs
+              tsconfig.json
+              .gitignore
+              src/
+                pages/
+                  index.astro        # トップページ（記事一覧）
+                  articles/
+                    [slug].astro     # 記事ページ
+                content/
+                  articles/          # 記事 Markdown（.md）
+                layouts/
+                  Base.astro         # 共通レイアウト
+            ```
+
+            ### package.json の最小構成
+
+            ```json
+            {
+              "name": "<slug>",
+              "type": "module",
+              "scripts": {
+                "dev": "astro dev",
+                "build": "astro build",
+                "preview": "astro preview"
+              },
+              "dependencies": {
+                "astro": "^5.0.0"
+              }
+            }
+            ```
+
+            ### astro.config.mjs
+
+            ```js
+            import { defineConfig } from 'astro/config';
+            export default defineConfig({ output: 'static' });
+            ```
+
+            ### 記事フォーマット（src/content/articles/*.md）
+
+            ```markdown
+            ---
+            title: "記事タイトル"
+            pubDate: 2026-01-01
+            description: "記事の概要"
+            ---
+
+            記事本文（1000字以上）
+
+            <!-- AFFILIATE_LINK: 商品名 -->
+            ```
+
+            Issue 本文に指定があれば記事内容を使う。なければサンプル記事を5件生成する。
+
+            ### ビルドとデプロイ手順
+
+            ```bash
+            cd apps/<slug>
+            npm install
+            npm run build
+            # dist/ が生成される
+            npx wrangler pages deploy dist/ --project-name <slug> --commit-dirty=true
+            ```
+
+            デプロイ後、URL を Issue にコメントする。
+            その後 `git add apps/<slug> && git commit -m "feat: add <slug> affiliate site" && git push origin main`
+
+            ---
+
             ## Phase 1: 調査・計画（実装前に必ず実施）
 
             Issue の内容を読んで**必要な調査を判断し**、実施してから計画を立てる。
