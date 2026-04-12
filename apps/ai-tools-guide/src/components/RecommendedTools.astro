@@ -1,0 +1,48 @@
+---
+import AffiliateLink from './AffiliateLink.astro';
+import type { Tool } from '../data/recommended-tools';
+
+export interface Props {
+  tools: Tool[];
+  heading?: string;
+}
+
+const { tools, heading = 'おすすめツール' } = Astro.props;
+---
+
+{tools.length > 0 && (
+  <div class="recommended-tools">
+    <h3 class="recommended-heading">{heading}</h3>
+    <div class="recommended-list">
+      {tools.map(tool => (
+        <AffiliateLink
+          url={tool.url}
+          title={tool.title}
+          description={tool.description}
+          badge={tool.badge}
+        />
+      ))}
+    </div>
+  </div>
+)}
+
+<style>
+  .recommended-tools {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+  .recommended-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .recommended-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+</style>

@@ -30,6 +30,15 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://ai-tools
   <meta name="twitter:title" content={fullTitle} />
   <meta name="twitter:description" content={description} />
 
+  <!-- GA4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX" is:inline></script>
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {

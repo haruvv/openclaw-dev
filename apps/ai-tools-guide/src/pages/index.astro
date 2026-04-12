@@ -1,6 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import RecommendedTools from '../components/RecommendedTools.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { getTopTools } from '../data/recommended-tools';
 
 const articles = (await getCollection('articles')).sort(
   (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
@@ -16,6 +19,7 @@ const categories = [
 
 const latestArticles = articles.slice(0, 5);
 const popularArticles = [...articles].reverse().slice(0, 3);
+const topTools = getTopTools(5);
 ---
 
 <Base title="AI活用ガイド" description="開発ツール・ビジネス自動化・SNS運用・教育・ライフハックをカバーするAI活用の総合情報サイト">
@@ -130,6 +134,11 @@ const popularArticles = [...articles].reverse().slice(0, 3);
           ))}
         </ul>
       </div>
+      <div style="margin-top:1.5rem;">
+        <RecommendedTools tools={topTools} />
+      </div>
+      <AdSlot slot="sidebar" />
+      <AdSlot slot="mobile" />
     </aside>
   </div>
 </Base>

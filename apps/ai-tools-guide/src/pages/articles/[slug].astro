@@ -1,6 +1,10 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import RecommendedTools from '../../components/RecommendedTools.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import AffiliateLink from '../../components/AffiliateLink.astro';
+import { getToolsByCategory } from '../../data/recommended-tools';
 
 export async function getStaticPaths() {
   const articles = await getCollection('articles');
@@ -21,7 +25,17 @@ const categoryLinks: Record<string, string> = {
   'ライフハック・生産性': '/categories/lifehack',
 };
 
+const categorySlugs: Record<string, string> = {
+  '開発ツール': 'dev-tools',
+  'ビジネス自動化': 'business-automation',
+  'SNS運用・マーケティング': 'social-media',
+  '教育・学習': 'education',
+  'ライフハック・生産性': 'lifehack',
+};
+
 const categoryHref = categoryLinks[article.data.category] ?? '/';
+const categorySlug = categorySlugs[article.data.category] ?? '';
+const relatedTools = getToolsByCategory(categorySlug, 3);
 ---
 
 <Base title={article.data.title} description={article.data.description}>
@@ -49,6 +63,8 @@ const categoryHref = categoryLinks[article.data.category] ?? '/';
       font-size: 0.78rem;
       color: var(--text-muted);
     }
+    .article-layout { display: grid; grid-template-columns: 1fr 280px; gap: 2rem; }
+    @media (max-width: 800px) { .article-layout { grid-template-columns: 1fr; } }
     .article-body {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -85,17 +101,27 @@ const categoryHref = categoryLinks[article.data.category] ?? '/';
       margin: 1rem 0;
     }
     .article-body pre code { background: none; padding: 0; color: inherit; }
-    .affiliate-placeholder {
-      background: #fefce8;
-      border: 2px dashed #fbbf24;
+    .related-tools {
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1rem;
-      text-align: center;
-      color: #92400e;
-      font-size: 0.9rem;
-      margin: 1.5rem 0;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .related-tools h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--primary);
+    }
+    .related-tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
     }
     .back-link { margin-top: 2rem; }
+    .article-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
   </style>
 
   <nav class="breadcrumb">
@@ -117,11 +143,39 @@ const categoryHref = categoryLinks[article.data.category] ?? '/';
     )}
   </div>
 
-  <div class="article-body">
-    <Content />
-  </div>
+  <div class="article-layout">
+    <div>
+      <div class="article-body">
+        <Content />
+      </div>
 
-  <div class="back-link">
-    <a href={categoryHref}>&larr; {article.data.category}の記事一覧へ</a>
+      <AdSlot slot="in-article" />
+
+      {relatedTools.length > 0 && (
+        <div class="related-tools">
+          <h2>この記事で紹介したツール</h2>
+          <div class="related-tools-grid">
+            {relatedTools.map(tool => (
+              <AffiliateLink
+                url={tool.url}
+                title={tool.title}
+                description={tool.description}
+                badge={tool.badge}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div class="back-link">
+        <a href={categoryHref}>&larr; {article.data.category}の記事一覧へ</a>
+      </div>
+    </div>
+
+    <aside class="article-sidebar">
+      <RecommendedTools tools={relatedTools} heading={`${article.data.category}のおすすめツール`} />
+      <AdSlot slot="sidebar" />
+      <AdSlot slot="mobile" />
+    </aside>
   </div>
 </Base>

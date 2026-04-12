@@ -1,6 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import RecommendedTools from '../../components/RecommendedTools.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { getToolsByCategory } from '../../data/recommended-tools';
 
 export async function getStaticPaths() {
   const articles = await getCollection('articles');
@@ -24,6 +27,7 @@ export async function getStaticPaths() {
 }
 
 const { category, articles } = Astro.props;
+const categoryTools = getToolsByCategory(category.slug, 3);
 ---
 
 <Base title={category.name} description={category.desc}>
@@ -40,6 +44,8 @@ const { category, articles } = Astro.props;
     .category-header p { opacity: 0.9; font-size: 1rem; }
     .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
     .breadcrumb a { color: var(--primary); }
+    .category-layout { display: grid; grid-template-columns: 1fr 280px; gap: 2rem; }
+    @media (max-width: 800px) { .category-layout { grid-template-columns: 1fr; } }
     .articles-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -60,6 +66,7 @@ const { category, articles } = Astro.props;
     .tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem; }
     .tag { background: var(--bg); border: 1px solid var(--border); border-radius: 100px; padding: 2px 8px; font-size: 0.75rem; color: var(--text-muted); }
     .empty { text-align: center; color: var(--text-muted); padding: 3rem; }
+    .category-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
   </style>
 
   <nav class="breadcrumb">
@@ -72,24 +79,34 @@ const { category, articles } = Astro.props;
     <p>{category.desc}</p>
   </div>
 
-  {articles.length === 0 ? (
-    <div class="empty">
-      <p>このカテゴリの記事は準備中です。</p>
+  <div class="category-layout">
+    <div>
+      {articles.length === 0 ? (
+        <div class="empty">
+          <p>このカテゴリの記事は準備中です。</p>
+        </div>
+      ) : (
+        <div class="articles-grid">
+          {articles.map(article => (
+            <a href={`/articles/${article.id}`} class="article-card">
+              <h2>{article.data.title}</h2>
+              <p>{article.data.description}</p>
+              {article.data.tags && article.data.tags.length > 0 && (
+                <div class="tags">
+                  {article.data.tags.map(tag => <span class="tag">#{tag}</span>)}
+                </div>
+              )}
+              <div class="date">{article.data.pubDate.toLocaleDateString('ja-JP')}</div>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
-  ) : (
-    <div class="articles-grid">
-      {articles.map(article => (
-        <a href={`/articles/${article.id}`} class="article-card">
-          <h2>{article.data.title}</h2>
-          <p>{article.data.description}</p>
-          {article.data.tags && article.data.tags.length > 0 && (
-            <div class="tags">
-              {article.data.tags.map(tag => <span class="tag">#{tag}</span>)}
-            </div>
-          )}
-          <div class="date">{article.data.pubDate.toLocaleDateString('ja-JP')}</div>
-        </a>
-      ))}
-    </div>
-  )}
+
+    <aside class="category-sidebar">
+      <RecommendedTools tools={categoryTools} heading={`${category.name}のおすすめツール`} />
+      <AdSlot slot="sidebar" />
+      <AdSlot slot="mobile" />
+    </aside>
+  </div>
 </Base>

@@ -1,0 +1,48 @@
+---
+export interface Props {
+  slot: 'sidebar' | 'in-article' | 'mobile';
+  format?: string;
+}
+
+const { slot, format } = Astro.props;
+
+const sizeMap: Record<string, { width: string; height: string }> = {
+  sidebar: { width: '100%', height: '250px' },
+  'in-article': { width: '100%', height: '120px' },
+  mobile: { width: '100%', height: '100px' },
+};
+
+const size = sizeMap[slot] ?? sizeMap.sidebar;
+---
+
+<div class:list={['ad-slot', `ad-slot--${slot}`]} data-ad-format={format ?? slot}>
+  <div class="ad-placeholder" style={`width:${size.width};height:${size.height}`}>
+    <span class="ad-label">広告</span>
+  </div>
+</div>
+
+<style>
+  .ad-slot {
+    margin: 1.5rem 0;
+  }
+  .ad-placeholder {
+    background: #f1f5f9;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ad-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .ad-slot--mobile {
+    display: none;
+  }
+  @media (max-width: 700px) {
+    .ad-slot--mobile {
+      display: block;
+    }
+  }
+</style>
