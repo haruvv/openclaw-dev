@@ -43,6 +43,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: "--model claude-opus-4-6"
           prompt: |
             以下の Issue を実装し、本番環境にデプロイしてください。
 
