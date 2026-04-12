@@ -1,0 +1,95 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  const categories = [
+    { slug: 'dev-tools', name: '開発ツール', icon: '💻', desc: 'Claude Code, Cursor, Windsurf など最新AIコーディングツールの活用法' },
+    { slug: 'business-automation', name: 'ビジネス自動化', icon: '⚙️', desc: 'Zapier, Make, n8n で業務を自動化する実践ガイド' },
+    { slug: 'social-media', name: 'SNS運用・マーケティング', icon: '📱', desc: 'AI を使った Instagram・X・TikTok の効率的な運用術' },
+    { slug: 'education', name: '教育・学習', icon: '📚', desc: 'ChatGPT を活用したeラーニング・資格取得・スキルアップ' },
+    { slug: 'lifehack', name: 'ライフハック・生産性', icon: '🚀', desc: 'AI で日常の課題を解決し、生産性を飛躍させる習慣術' },
+  ];
+
+  return categories.map(cat => ({
+    params: { category: cat.slug },
+    props: {
+      category: cat,
+      articles: articles
+        .filter(a => a.data.categorySlug === cat.slug)
+        .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()),
+    },
+  }));
+}
+
+const { category, articles } = Astro.props;
+---
+
+<Base title={category.name} description={category.desc}>
+  <style>
+    .category-header {
+      background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2.5rem;
+    }
+    .category-header .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .category-header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .category-header p { opacity: 0.9; font-size: 1rem; }
+    .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--primary); }
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .article-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: box-shadow 0.2s, transform 0.2s;
+      display: block;
+    }
+    .article-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); transform: translateY(-2px); text-decoration: none; }
+    .article-card h2 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.6rem; line-height: 1.5; }
+    .article-card p { font-size: 0.85rem; color: var(--text-muted); }
+    .article-card .date { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem; }
+    .tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem; }
+    .tag { background: var(--bg); border: 1px solid var(--border); border-radius: 100px; padding: 2px 8px; font-size: 0.75rem; color: var(--text-muted); }
+    .empty { text-align: center; color: var(--text-muted); padding: 3rem; }
+  </style>
+
+  <nav class="breadcrumb">
+    <a href="/">ホーム</a> &rsaquo; {category.name}
+  </nav>
+
+  <div class="category-header">
+    <div class="icon">{category.icon}</div>
+    <h1>{category.name}</h1>
+    <p>{category.desc}</p>
+  </div>
+
+  {articles.length === 0 ? (
+    <div class="empty">
+      <p>このカテゴリの記事は準備中です。</p>
+    </div>
+  ) : (
+    <div class="articles-grid">
+      {articles.map(article => (
+        <a href={`/articles/${article.id}`} class="article-card">
+          <h2>{article.data.title}</h2>
+          <p>{article.data.description}</p>
+          {article.data.tags && article.data.tags.length > 0 && (
+            <div class="tags">
+              {article.data.tags.map(tag => <span class="tag">#{tag}</span>)}
+            </div>
+          )}
+          <div class="date">{article.data.pubDate.toLocaleDateString('ja-JP')}</div>
+        </a>
+      ))}
+    </div>
+  )}
+</Base>

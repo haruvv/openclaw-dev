@@ -1,0 +1,109 @@
+---
+export interface Props {
+  title: string;
+  description?: string;
+  ogpImage?: string;
+}
+
+const { title, description = 'AI活用ガイド - 開発ツール・自動化・SNS・教育・ライフハックの最新情報', ogpImage } = Astro.props;
+const siteTitle = 'AI活用ガイド';
+const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://ai-tools-guide.pages.dev');
+---
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+
+  <!-- OGP -->
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonicalURL} />
+  {ogpImage && <meta property="og:image" content={ogpImage} />}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --accent: #06b6d4;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --radius: 8px;
+    }
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 0 1rem;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+    }
+    .site-title { font-size: 1.4rem; font-weight: 700; color: #fff; }
+    .site-title:hover { text-decoration: none; }
+    nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    nav a { color: rgba(255,255,255,0.85); font-size: 0.9rem; }
+    nav a:hover { color: #fff; text-decoration: none; }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    footer {
+      background: var(--text);
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      padding: 1.5rem 1rem;
+      font-size: 0.85rem;
+      margin-top: 4rem;
+    }
+    footer a { color: rgba(255,255,255,0.85); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a href="/" class="site-title">🤖 AI活用ガイド</a>
+      <nav>
+        <a href="/categories/dev-tools">開発ツール</a>
+        <a href="/categories/business-automation">ビジネス自動化</a>
+        <a href="/categories/social-media">SNS運用</a>
+        <a href="/categories/education">教育・学習</a>
+        <a href="/categories/lifehack">ライフハック</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <slot />
+  </main>
+  <footer>
+    <p>&copy; 2026 AI活用ガイド. All rights reserved.</p>
+    <p style="margin-top:0.5rem;"><a href="/">ホーム</a> &nbsp;|&nbsp; <a href="/categories/dev-tools">開発ツール</a> &nbsp;|&nbsp; <a href="/categories/lifehack">ライフハック</a></p>
+  </footer>
+</body>
+</html>

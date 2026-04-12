@@ -1,0 +1,135 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const articles = (await getCollection('articles')).sort(
+  (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
+);
+
+const categories = [
+  { slug: 'dev-tools', name: '開発ツール', icon: '💻', desc: 'Claude Code, Cursor, Windsurf など最新AIコーディングツールの活用法' },
+  { slug: 'business-automation', name: 'ビジネス自動化', icon: '⚙️', desc: 'Zapier, Make, n8n で業務を自動化する実践ガイド' },
+  { slug: 'social-media', name: 'SNS運用・マーケティング', icon: '📱', desc: 'AI を使った Instagram・X・TikTok の効率的な運用術' },
+  { slug: 'education', name: '教育・学習', icon: '📚', desc: 'ChatGPT を活用したeラーニング・資格取得・スキルアップ' },
+  { slug: 'lifehack', name: 'ライフハック・生産性', icon: '🚀', desc: 'AI で日常の課題を解決し、生産性を飛躍させる習慣術' },
+];
+
+const latestArticles = articles.slice(0, 5);
+const popularArticles = [...articles].reverse().slice(0, 3);
+---
+
+<Base title="AI活用ガイド" description="開発ツール・ビジネス自動化・SNS運用・教育・ライフハックをカバーするAI活用の総合情報サイト">
+  <style>
+    .hero {
+      background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem; }
+    .hero p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--primary); }
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    .category-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .category-card:hover { transform: translateY(-3px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-decoration: none; }
+    .category-card .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .category-card h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+    .category-card p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .article-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: box-shadow 0.2s;
+    }
+    .article-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-decoration: none; }
+    .article-card .category-badge {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 100px;
+      margin-bottom: 0.75rem;
+    }
+    .article-card h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; line-height: 1.5; }
+    .article-card p { font-size: 0.85rem; color: var(--text-muted); }
+    .article-card .date { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem; }
+    .two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } .hero h1 { font-size: 1.5rem; } }
+    .popular-list { list-style: none; }
+    .popular-list li { padding: 1rem 0; border-bottom: 1px solid var(--border); }
+    .popular-list li:last-child { border-bottom: none; }
+    .popular-list a { font-weight: 600; font-size: 0.95rem; }
+    .popular-list .meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .sidebar-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+  </style>
+
+  <div class="hero">
+    <h1>🤖 AI活用ガイド</h1>
+    <p>開発ツール・ビジネス自動化・SNS運用・教育・ライフハックを網羅。AIで仕事と生活を変える実践情報をお届けします。</p>
+  </div>
+
+  <section>
+    <h2>カテゴリ一覧</h2>
+    <div class="categories-grid">
+      {categories.map(cat => (
+        <a href={`/categories/${cat.slug}`} class="category-card">
+          <div class="icon">{cat.icon}</div>
+          <h3>{cat.name}</h3>
+          <p>{cat.desc}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <div class="two-col">
+    <section>
+      <h2>最新記事</h2>
+      <div class="articles-grid">
+        {latestArticles.map(article => (
+          <a href={`/articles/${article.id}`} class="article-card">
+            <span class="category-badge">{article.data.category}</span>
+            <h3>{article.data.title}</h3>
+            <p>{article.data.description}</p>
+            <div class="date">{article.data.pubDate.toLocaleDateString('ja-JP')}</div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <aside>
+      <div class="sidebar-box">
+        <h2 style="font-size:1.1rem; border-bottom-width:1px;">人気記事</h2>
+        <ul class="popular-list">
+          {popularArticles.map((article, i) => (
+            <li>
+              <a href={`/articles/${article.id}`}>{article.data.title}</a>
+              <div class="meta">{article.data.category} · {article.data.pubDate.toLocaleDateString('ja-JP')}</div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </aside>
+  </div>
+</Base>
